@@ -17,35 +17,9 @@ class Yuntu_case(unittest.TestCase):
 		# driver.close()
 		pass
 
-	def multi_upload_movie(self):
-		obj_log.info('Upload movie start................')
-		self.assertEqual(test_case.multi_upload_vedios(), True)
-		time.sleep(2)
-
-	def multi_add_new(self):
-		obj_log.info('Add new start................')
-		self.assertEqual(test_case.multi_new_add(["AABCE","AAALA"], type="2"), True)
-
-	def add_new_arear(self):
-		obj_log.info('Add new start................')
-		self.assertEqual(self.obj_test_case.new_add("AAAAC", type="3", num=20), True)
-
-	def upload_movie(self):
-		obj_log.info('Upload movie start................')
-		for i in range(2000):
-			self.assertEqual(self.obj_test_case.movie_upload(), True)
-			time.sleep(1)
-
-	def del_videos(self):
-		obj_log.info('Delete movie start................')
-		self.assertEqual(self.obj_test_case.vidoes_del(), True)
 	def app_banner(self):
 		obj_log.info('Get library banner start................')
 		self.assertEqual(self.obj_test_case.banner_compare(areaCode="510107"), True)
-		# self.assertEqual(self.obj_test_case.banner_compare(areaCode="620200"), True)
-		# self.assertEqual(self.obj_test_case.banner_compare(hallCode="AJAJ"), True)
-
-
 
 def suite():
 	suite = unittest.TestSuite()

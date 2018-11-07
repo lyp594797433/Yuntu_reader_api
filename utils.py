@@ -345,11 +345,11 @@ class Tools(Singleton):
 				indexOrName = int(indexOrName)
 			self.table = self.data.sheet_by_index(indexOrName)
 
-		# 获叏第一行作为key值
+		# 获取第一行作为key值
 		self.keys = self.table.row_values(0)
-		# 获叏总行数
+		# 获取总行数
 		self.rowNum = self.table.nrows
-		# 获叏总列数
+		# 获取总列数
 		self.colNum = self.table.ncols
 		if self.rowNum <= 1:
 			print("总行数小于1")
