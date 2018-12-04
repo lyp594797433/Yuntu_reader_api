@@ -17,13 +17,13 @@ class Yuntu_case(unittest.TestCase):
 		# driver.close()
 		pass
 
-	def app_banner(self):
-		obj_log.info('Get library banner start................')
-		self.assertEqual(self.obj_test_case.banner_compare(areaCode="510107"), True)
+	def ebook_pageview_add(self):
+		obj_log.info('用例：ebook_pageview_add 开始................')
+		self.assertEqual(self.obj_test_case.add_ebookpageview(ebook_id='9608',num=2), True)
 
 def suite():
 	suite = unittest.TestSuite()
-	suite.addTest(Yuntu_case("app_banner"))
+	suite.addTest(Yuntu_case("ebook_pageview_add"))
 	# suite.addTest(Yuntu_case("add_new_arear"))
 	# suite.addTest(Yuntu_case("del_videos"))
 	# suite.addTest(Yuntu_case("upload_movie"))

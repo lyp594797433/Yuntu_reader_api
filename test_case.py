@@ -12,22 +12,75 @@ class Test_case(runner.Runner):
 		self.obj_tools = utils.Tools()
 		self.app_add = self.obj_tools.app_add
 
-	def add_pageview(self,ebook_id):
+	def count_pageview_app(self,ebook_id,identity,hallcode):
+		'''查询APP电子书阅读量'''
+		req_type = 'GET'
+		temp_dict = {}
+		temp_dict['id'] = ebook_id
+		temp_dict['identity'] = identity
+		temp_dict['libCode'] = hallcode
+		temp_dict['visitType'] = 1
+		temp_dict['fromSearch'] = 0
+		API_URL = "http://" + self.app_add + "/userApp/ebook/info"
+		req = obj_tools.call_rest_api(API_URL, req_type=req_type, data_rtn=temp_dict)
+		# rtn_temp = req.text
+		# rtn = json.loads(rtn_temp)
+		rtn = req['data']
+		return rtn['number']
+
+
+
+
+	def add_ebookpageview(self,ebook_id,hallcode=None,num=1):
 		'''增加某本电子书阅读量'''
 		req_type = 'POST'
 		temp_dict= {}
-		API_URL = "http://" + self.add + "/api/notice/add"
-		temp_dict['duration'] = 12
-		if obj == 'area':
-			temp_dict['content'] = now_time + '新增消息' + '-' + obj.replace()
-		req = requests.get(API_URL)
-		rtn = json.loads(req.text)
-		if req.status_code == 200:
-			obj_log.info('Get libBanner successfully........')
+		API_URL = "http://" + self.app_add + "/userApp/ebook/addEbookReadRecord"
+		if hallcode is None:
+			get_hallcode_ebookallocated = self._get_hallcode_ebookallocated(ebook_id)
+			get_hallcode_ebookhadkread = self._get_hallcode_ebookhadkread(ebook_id)
+			libcode_list = list(set(get_hallcode_ebookallocated) - set(get_hallcode_ebookhadkread))
+		get_ebook_name = self._get_ebookname(ebook_id)
+		ebook_name = get_ebook_name['bookName']
+		temp_dict['ebookId'] = ebook_id
+		peruser_list = self._get_allperuser(ebook_id)
+		if num > len(peruser_list):
+			num = len(peruser_list)
+		for x in range(1,num+1):
+			if hallcode is None:
+				peruser_list = self._get_allperuser(ebook_id)
+				get_hallcode_ebookallocated = self._get_hallcode_ebookallocated(ebook_id)
+				get_hallcode_ebookhadkread = self._get_hallcode_ebookhadkread(ebook_id)
+				libcode_list = list(set(get_hallcode_ebookallocated) - set(get_hallcode_ebookhadkread))
+				if len(libcode_list) <2:
+					obj_log.info("请更换电子书..............................")
+					return False
+			libcode = libcode_list[x-1]
+			peruser = peruser_list[x-1]
+			temp_dict['libCode'] = libcode
+			temp_dict['peruser'] = peruser
+			req = obj_tools.call_rest_api(API_URL,req_type=req_type,data_rtn=temp_dict)
+			if req['status'] == 200:
+				obj_log.info('增加图书馆{0}电子书:{1} 阅读量第{2}次成功........'.format(libcode,ebook_name,x))
+			else:
+				obj_log.info('增加图书馆{0}电子书:{1} 阅读量第{2}次失败........'.format(libcode,ebook_name,x))
+				return False
+			if x == num:
+				count_app_pageview = self.count_pageview_app(ebook_id,peruser,libcode)
+		'''阅读量与数据库对比'''
+		count_pageview_db = self._get_ebookpageview_count(ebook_id)
+		if count_app_pageview == count_pageview_db:
+			obj_log.info("数据库阅读量：{}".format(count_pageview_db))
+			obj_log.info("APP阅读量：{}".format(count_app_pageview))
+			obj_log.info("数据库阅读量与APP阅读量一致.........")
+			return True
 		else:
-			obj_log.info('Get libBanner failed.......')
+			obj_log.info("数据库阅读量：{}".format(count_pageview_db))
+			obj_log.info("APP阅读量：{}".format(count_app_pageview))
+			obj_log.info("数据库阅读量与APP阅读量不一致.........")
 			return False
-		return rtn['data']
+
+		return True
 
 
 '''******************************************************************************************************************'''

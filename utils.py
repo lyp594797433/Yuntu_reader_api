@@ -36,18 +36,17 @@ class Tools(Singleton):
 		# self.app_add = "192.168.28.10:18081"
 
 
-	def call_rest_api(self, API_URL, req_type, hallCode=None, username=None,
-					  		password=None, files=None,data_rtn=None, header=True,
+	def call_rest_api(self, API_URL, req_type,files=None,data_rtn=None, header=True,
 					  		get_err_msg=True, token=None, timeout=None):
-		retry_num = 1
+		retry_num = 5
 		retry_interval_time = 10
 		cnt = 0
 		while cnt < retry_num:
 			if token == None:
-				token = self.loginYunyun()
+				'''此接口不需要token'''
+				pass
 			else:
-				token = token
-
+				token = self.login_readerapp()
 			headers = {
 				'token': token,
 				'Content-Type': 'application/json;charset=UTF-8'
@@ -59,7 +58,6 @@ class Tools(Singleton):
 						# obj_log.info values
 
 						req = requests.post(API_URL, data=values, headers=headers)
-						print(req)
 					elif req_type == "PUT":
 						# obj_log.info API_URL
 						values = json.dumps(data_rtn)
@@ -70,7 +68,6 @@ class Tools(Singleton):
 						req = requests.get(API_URL, params=data_rtn, headers=headers,timeout=timeout)
 					elif req_type == "DELETE":
 						# obj_log.info API_URL
-
 						req = requests.delete(API_URL, params=data_rtn, headers=headers,timeout=timeout)
 				else:
 					if req_type == "POST":
@@ -110,39 +107,27 @@ class Tools(Singleton):
 
 		return False
 
-	def loginYunyun(self, hallCode="",username = '',password=''):
-		req_type = "POST"
+	def login_readerapp(self,idCard='510722199003150950',idPassword='e10adc3949ba59abbe56e057f20f883e'):
+		'''读者APP登陆'''
 		temp_dict = {}
-		if hallCode == "":
-			temp_dict['hallCode'] = self.hallCode
-		else:
-			temp_dict['hallCode'] = hallCode
-		if username == '':
-			temp_dict['username'] = "admin"
-		else:
-			temp_dict['username'] = username
-		temp_dict['forceLogin'] = "1"
-		if password == '':
-			temp_dict['password'] = self.get_md5(self.password)
-		else:
-			temp_dict['password'] = password
+		temp_dict['idCard'] = idCard
+		temp_dict['idPassword'] = idPassword
 		values = json.dumps(temp_dict)
-		API_URL = "http://" + self.add + "/api/user/login"
-		print(API_URL)
+		API_URL = "http://" + self.app_add + "/userApp/reader/login"
 		headers = {
 			'Content-Type': 'application/json;charset=UTF-8'
 		}
 		req = requests.post(API_URL, data=values, headers=headers)
 		if str(req.status_code) == "200":
-			obj_log.info('Login cloud operations management system {} successfully.......'.format(hallCode))
+			obj_log.info('登陆读者APP成功.......')
 			rtn_temp = req.text
 			rtn = json.loads(str(rtn_temp))
-			rtn = rtn['data']
+			rtn = rtn['data']['token']
 			print(rtn)
 			req.close()
 			return rtn
 		else:
-			obj_log.info('Login cloud operations management system failed.......')
+			obj_log.info('读者APP登陆失败.......')
 			return False
 
 
@@ -256,28 +241,6 @@ class Tools(Singleton):
 			conn.close()
 			return True
 
-	def send_mail(self,to_list,bodyFile="" ,sub='QA Report',MAIL_HOST="smtp.163.com",MAIL_USER="18782019436@163.com",MAIL_PWD="lyp594797433",MAILTO_FROM='18782019436@163.com'):
-		if bodyFile != "":
-			f = open(bodyFile, 'r')
-			msg = MIMEText(f.read(), 'html', 'utf8')
-			f.close()
-		else:
-			print('File is empty!')
-		msg['Subject'] = sub
-		msg['From'] = MAILTO_FROM
-		msg['To'] = ";".join(to_list)
-		try:
-			server = smtplib.SMTP(MAIL_HOST)
-			#server.connect(MAIL_HOST,MAIL_PORT)
-			server.starttls()
-			server.login(MAIL_USER, MAIL_PWD)
-			server.sendmail(MAILTO_FROM, to_list, msg.as_string())
-			server.close()
-			return True
-		except Exception as e:
-			print(str(e))
-			return False
-
 	def sql_event_no_dic(self, statement):
 		sql_type = statement.split(" ")[0]
 		# conn = MySQLdb.connect(
@@ -307,7 +270,7 @@ class Tools(Singleton):
 		# 	db='bookplatform_test',
 		# )
 
-		conn = MySQLdb.connect(
+		conn = pymysql.connect(
 			host='120.77.80.162',
 			port=3306,
 			user='test',
@@ -333,6 +296,29 @@ class Tools(Singleton):
 			cur.close()
 			conn.close()
 			return True
+
+	def send_mail(self,to_list,bodyFile="" ,sub='QA Report',MAIL_HOST="smtp.163.com",MAIL_USER="18782019436@163.com",MAIL_PWD="lyp594797433",MAILTO_FROM='18782019436@163.com'):
+		if bodyFile != "":
+			f = open(bodyFile, 'r')
+			msg = MIMEText(f.read(), 'html', 'utf8')
+			f.close()
+		else:
+			print('File is empty!')
+		msg['Subject'] = sub
+		msg['From'] = MAILTO_FROM
+		msg['To'] = ";".join(to_list)
+		try:
+			server = smtplib.SMTP(MAIL_HOST)
+			#server.connect(MAIL_HOST,MAIL_PORT)
+			server.starttls()
+			server.login(MAIL_USER, MAIL_PWD)
+			server.sendmail(MAILTO_FROM, to_list, msg.as_string())
+			server.close()
+			return True
+		except Exception as e:
+			print(str(e))
+			return False
+
 	'''Excel文件操作 '''
 	'''**************************************************************************************************************'''
 	'''Excel 文件读取'''
